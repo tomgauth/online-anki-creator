@@ -1,5 +1,3 @@
-from tkinter import SEPARATOR
-from tkinter.ttk import Separator
 import streamlit as st
 import genanki
 import random
