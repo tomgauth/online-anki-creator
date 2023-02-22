@@ -8,6 +8,10 @@ import os
 
 SEPARATOR = ";"
 
+# create a list of languages that can be used with the google text to speech API
+language_list = ['af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue', 'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi', 'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv', 'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es', 'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy']
+
+
 def gen_anki_id():
     return random.randrange(1 << 30, 1 << 31)
 
@@ -122,23 +126,29 @@ def to_anki_deck_with_audio(table, language_one, language_two, deck_title):
 
 def cleanup():
     # delete all the audio files
+    print("removing audio files and apkg files")
     for file in os.listdir():
         if file.endswith(".mp3"):
             os.remove(file)
         elif file.endswith(".apkg"):
             os.remove(file)
+            
 
 def main():    
     anki_deck = None
     with st.form("input phrases"):
         st.title("Create your Anki Deck below!")
         # create 2 input fields called language one and language two for inputing the language as a string (5 characters max)
-        language_one = st.text_input("Language One", max_chars=5)
-        language_two = st.text_input("Language Two", max_chars=5)
+        # use a selector to select the language instead of a text input
+        language_one = st.selectbox("Language One", language_list, index=14)        
+        language_two = st.selectbox("Language Two", language_list, index=20)
         # create a toggle button to select if you want to use audio or not
         use_audio = st.checkbox("Use Audio")
         st.text("This is a simple text input, use ; to separate the fields")
-        content = st.text_area("Write your list of phrases")
+        # create a text area for inputing the phrases with default text """bonjour ; hello
+        # merci ; thank you"""
+        content = st.text_area(label= "input your vocabulary" ,placeholder="""hello ; bonjour
+thank you ; merci""", height=200)
         table = txt_to_list_of_lists(content)
         deck_title = title = st.text_input("Deck Title")
         submitted = st.form_submit_button("Submit")
