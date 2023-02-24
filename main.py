@@ -5,6 +5,7 @@ from os.path import exists
 import time
 from gtts import gTTS
 import os
+from gen_audio import TextToSpeechService
 
 SEPARATOR = ";"
 
@@ -151,13 +152,31 @@ def main():
 thank you ; merci""", height=200)
         table = txt_to_list_of_lists(content)
         deck_title = title = st.text_input("Deck Title")
-        submitted = st.form_submit_button("Submit")
+        submit_anki = st.form_submit_button("Generate Anki Deck")
+        silence_between_blocks_duration = st.number_input("Silence between blocks duration", min_value=0, max_value=10, value=1)
+        silence_between_phrases_duration = st.number_input("Silence between phrases duration", min_value=0, max_value=10, value=2)
+        submit_audio = st.form_submit_button("Generate Audio")
         # st.write(table)
-        if submitted:
+        if submit_anki:
             if use_audio:
                 anki_deck = to_anki_deck_with_audio(table, language_one, language_two, deck_title)
             else:
-                anki_deck = to_anki_deck_no_audio(table, language_one, language_one, deck_title)         
+                anki_deck = to_anki_deck_no_audio(table, language_one, language_one, deck_title)   
+        if submit_audio:
+            ttss = TextToSpeechService(
+                text=content,
+                language_1=language_one,
+                language_2=language_two,
+                file_name=deck_title,
+                separator=";",
+                silence_between_blocks_duration=silence_between_blocks_duration,
+                silence_between_phrases_duration=silence_between_phrases_duration,
+                shuffle_blocks=True
+                )
+            ttss.generate_blocks()
+            ttss.concatenate_blocks()
+            ttss.create_audio_file()
+            audio_lesson = ttss.get_audio_file()
     # if a file named f"{deck_title}.apkg" exists, in the current folder then show the link to the file 
     if anki_deck:
         st.text("Your deck has been created")            
@@ -168,6 +187,15 @@ thank you ; merci""", height=200)
             # wait for one minute before deleting the audio files
             time.sleep(60)
             cleanup()
+    if audio_lesson:
+        st.text("Your audio lesson has been created")            
+        st.text("You can download it from the link below")   
+        with open(f"{deck_title}.mp3", 'rb') as f:
+            contents = f.read()
+            st.download_button("Download my audio lesson", data=contents, file_name=f"{deck_title}.mp3")
+            # wait for one minute before deleting the audio files
+            time.sleep(60)
+            ttss.delete_audio_files()
 
 
 if __name__ == '__main__':
