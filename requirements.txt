@@ -17,6 +17,7 @@ decorator==4.4.2
 entrypoints==0.4
 executing==0.10.0
 ffmpeg==1.4
+fpdf==1.7.2
 frozendict==2.3.4
 genanki==0.13.0
 gitdb==4.0.9

@@ -6,6 +6,7 @@ import time
 from gtts import gTTS
 import os
 from gen_audio import TextToSpeechService
+from gen_pdf import PDFGenerator
 
 SEPARATOR = ";"
 
@@ -137,6 +138,8 @@ def cleanup():
 
 def main():    
     anki_deck = None
+    audio_lesson = None
+    pdf_lesson = None
     with st.form("input phrases"):
         st.title("Create your Anki Deck below!")
         # create 2 input fields called language one and language two for inputing the language as a string (5 characters max)
@@ -156,6 +159,7 @@ thank you ; merci""", height=200)
         silence_between_blocks_duration = st.number_input("Silence between blocks duration", min_value=0, max_value=10, value=1)
         silence_between_phrases_duration = st.number_input("Silence between phrases duration", min_value=0, max_value=10, value=2)
         submit_audio = st.form_submit_button("Generate Audio")
+        submit_pdf = st.form_submit_button("Generate PDF")
         # st.write(table)
         if submit_anki:
             if use_audio:
@@ -177,6 +181,14 @@ thank you ; merci""", height=200)
             ttss.concatenate_blocks()
             ttss.create_audio_file()
             audio_lesson = ttss.get_audio_file()
+        if submit_pdf:
+            pdf_lesson = PDFGenerator(
+                text=content,
+                language_1=language_one,
+                language_2=language_two,
+                file_name=deck_title
+                )
+            pdf_lesson.format_content()
     # if a file named f"{deck_title}.apkg" exists, in the current folder then show the link to the file 
     if anki_deck:
         st.text("Your deck has been created")            
@@ -196,6 +208,15 @@ thank you ; merci""", height=200)
             # wait for one minute before deleting the audio files
             time.sleep(60)
             ttss.delete_audio_files()
+    if pdf_lesson:
+        st.text("Your pdf lesson has been created")            
+        st.text("You can download it from the link below")   
+        with open(f"{deck_title}.pdf", 'rb') as f:
+            contents = f.read()
+            st.download_button("Download my pdf lesson", data=contents, file_name=f"{deck_title}.pdf")
+            # wait for one minute before deleting the audio files
+            time.sleep(60)
+            pdf_lesson.delete_pdf_file()
 
 
 if __name__ == '__main__':
