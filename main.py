@@ -158,6 +158,8 @@ thank you ; merci""", height=200)
         submit_anki = st.form_submit_button("Generate Anki Deck")
         silence_between_blocks_duration = st.number_input("Silence between blocks duration", min_value=0, max_value=10, value=1)
         silence_between_phrases_duration = st.number_input("Silence between phrases duration", min_value=0, max_value=10, value=2)
+        block_type = st.selectbox("Block Type", ["recall", "repeat"])
+        shuffle_blocks = st.checkbox("Shuffle Blocks")
         submit_audio = st.form_submit_button("Generate Audio")
         submit_pdf = st.form_submit_button("Generate PDF")
         # st.write(table)
@@ -175,7 +177,8 @@ thank you ; merci""", height=200)
                 separator=";",
                 silence_between_blocks_duration=silence_between_blocks_duration,
                 silence_between_phrases_duration=silence_between_phrases_duration,
-                shuffle_blocks=True
+                shuffle_blocks=shuffle_blocks,
+                block_type = block_type
                 )
             ttss.generate_blocks()
             ttss.concatenate_blocks()

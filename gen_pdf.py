@@ -8,7 +8,7 @@ class PDFGenerator:
         self.language_1 = language_1
         self.language_2 = language_2
         self.file_name = file_name
-        self.pdf = FPDF()
+        self.pdf = FPDF()        
     
     def get_file_name(self):
         return self.file_name
@@ -26,10 +26,11 @@ class PDFGenerator:
 
         # Create a new PDF object and add a page
         
-        self.pdf.add_page()
+        self.pdf.add_page()    
 
+        self.pdf.add_font('Arial', '', 'arial.ttf', uni=True)
         # Add a title to the page, centered at the top of the page with a 20pt font
-        self.pdf.set_font('Arial', 'B', 20)
+        self.pdf.set_font('Arial',  'B', 20)
         self.pdf.cell(0, 20, f'{self.file_name}', 0, 1, 'C')
 
         # add a 10% of the page width space between the title and the table
