@@ -7,6 +7,11 @@ from gtts import gTTS
 import os
 from gen_audio import TextToSpeechService
 from gen_pdf import PDFGenerator
+from audio_recorder_streamlit import audio_recorder
+import openai
+
+openai.api_key = "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"
+model_engine = "text-davinci-003"
 
 SEPARATOR = ";"
 
@@ -18,6 +23,52 @@ def gen_anki_id():
     return random.randrange(1 << 30, 1 << 31)
 
 
+ai_generated_phrases = None
+target_language = st.selectbox("Target language", language_list, index=14)
+audio_bytes = audio_recorder()
+if audio_bytes:
+    st.audio(audio_bytes, format="audio/mp3")
+    # save the audio file
+    with open("audio.mp3", "wb") as f:
+        f.write(audio_bytes)
+    if "audio.mp3" in os.listdir():
+        audio_file = open("audio.mp3", "rb")
+        print("audio file: ", audio_file)
+        transcript = openai.Audio.transcribe("whisper-1", audio_file)
+        print(transcript)
+        prompt = f"""
+        Extract important phrases from the following text and add their translation into the target language following this format:
+        Phrases are used for language learning, as a vocabulary list or list of key phrases the learner should learn.
+        Phrases can be a: 
+        a group of words that form a sentence (most of the phrases should be this)
+        an adverb
+        a noun group
+        a verb using infinitive form 
+        a noun using singular and an article if needed
+        If there is a conjugated verb in the phrase, always USE A PRONOUN!
+        MAX CHARACTERS PER PHRASE: 30
+        Spell out the numbers in the phrase and the translation
+[phrase in original language] ; [translation in the target language]
+[phrase in original language] ; [translation in the target language]
+...
+target language code = {target_language}
+
+{transcript.text}
+        """
+        important_phrases_response = openai.Completion.create(
+            engine=model_engine,
+            prompt=prompt,
+            max_tokens=2000,
+            n=1,
+            stop=None,
+            temperature=0.7,
+        )
+        ai_generated_phrases = important_phrases_response.choices[0].text
+        # remove all empty lines
+        ai_generated_phrases = os.linesep.join([s for s in ai_generated_phrases.splitlines() if s])
+        print(important_phrases_response.choices[0].text)
+        st.write(important_phrases_response.choices[0].text)
+    
 
 my_model = genanki.Model(
   gen_anki_id(),
@@ -141,6 +192,8 @@ def main():
     audio_lesson = None
     pdf_lesson = None
     with st.form("input phrases"):
+    # pick a target language
+
         st.title("Create your Anki Deck below!")
         # create 2 input fields called language one and language two for inputing the language as a string (5 characters max)
         # use a selector to select the language instead of a text input
@@ -151,7 +204,11 @@ def main():
         st.text("This is a simple text input, use ; to separate the fields")
         # create a text area for inputing the phrases with default text """bonjour ; hello
         # merci ; thank you"""
-        content = st.text_area(label= "input your vocabulary" ,placeholder="""hello ; bonjour
+        if ai_generated_phrases:
+            # prefill the form with the generated phrases
+            content = st.text_area(label= "input your vocabulary" , value=ai_generated_phrases ,placeholder=ai_generated_phrases, height=200)
+        else:            
+            content = st.text_area(label= "input your vocabulary" ,placeholder="""hello ; bonjour
 thank you ; merci""", height=200)
         intro_outro_language = st.selectbox("Intro/Outro Language", language_list, index=14)
         intro = st.text_area(label= "input your intro" ,placeholder="Lesson 1", height=200)
@@ -227,6 +284,9 @@ thank you ; merci""", height=200)
             # wait for one minute before deleting the audio files
             time.sleep(60)
             pdf_lesson.delete_pdf_file()
+
+
+
 
 
 if __name__ == '__main__':
