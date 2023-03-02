@@ -153,12 +153,15 @@ def main():
         # merci ; thank you"""
         content = st.text_area(label= "input your vocabulary" ,placeholder="""hello ; bonjour
 thank you ; merci""", height=200)
+        intro_outro_language = st.selectbox("Intro/Outro Language", language_list, index=14)
+        intro = st.text_area(label= "input your intro" ,placeholder="Lesson 1", height=200)
+        outro = st.text_area(label= "input your outro" ,placeholder="Thank you for listening", height=200)
         table = txt_to_list_of_lists(content)
         deck_title = title = st.text_input("Deck Title")
         submit_anki = st.form_submit_button("Generate Anki Deck")
         silence_between_blocks_duration = st.number_input("Silence between blocks duration", min_value=0, max_value=10, value=1)
         silence_between_phrases_duration = st.number_input("Silence between phrases duration", min_value=0, max_value=10, value=2)
-        block_type = st.selectbox("Block Type", ["recall", "repeat"])
+        block_type = st.selectbox("Block Type", ["recall", "repeat", "recognize"])
         shuffle_blocks = st.checkbox("Shuffle Blocks")
         submit_audio = st.form_submit_button("Generate Audio")
         submit_pdf = st.form_submit_button("Generate PDF")
@@ -178,10 +181,14 @@ thank you ; merci""", height=200)
                 silence_between_blocks_duration=silence_between_blocks_duration,
                 silence_between_phrases_duration=silence_between_phrases_duration,
                 shuffle_blocks=shuffle_blocks,
-                block_type = block_type
+                block_type = block_type,
+                intro_text = intro,
+                outro_text = outro,
+                intro_outro_language = intro_outro_language
                 )
+            st.text(ttss.intro_text + " " + ttss.outro_text)
             ttss.generate_blocks()
-            ttss.concatenate_blocks()
+            st.text("number of blocks: " + str(len(ttss.blocks_to_concat)))
             ttss.create_audio_file()
             audio_lesson = ttss.get_audio_file()
         if submit_pdf:

@@ -75,9 +75,9 @@ block type: {self.block_type}""")
         if self.block_type == "Repeat":
             return f"""{self.phrase_1} x {self.repeat_1} times - {self.silence_between_repeat} seconds silence - {self.phrase_2} x {self.repeat_2} times - {self.silence_between_phrases_duration} seconds silence - {self.silence_between_blocks_duration} seconds silence"""
         pass
-        
-
-    def concatenate_silences(self, duration):
+    
+    @staticmethod
+    def concatenate_silences(duration):
         # if the duration is not an integer or is zero, return an error
         silences_to_concat = []
         if not isinstance(duration, int) or duration == 0:
@@ -114,6 +114,51 @@ block type: {self.block_type}""")
 
         return final_clip
 
+    def generate_recognize_block(self):
+        files_to_concat = []      
+        # generate an audio file with the phrase in language 1           
+        TTS_1 = gTTS(text=self.phrase_1, lang=self.language_1)
+        TTS_1.save(f"staticfiles/{self.phrase_1}_{self.language_1}.mp3")
+        # generate an audio file with the phrase in language 2
+        TTS_2 = gTTS(text=self.phrase_2, lang=self.language_2)
+        TTS_2.save(f"staticfiles/{self.phrase_2}_{self.language_2}.mp3")
+
+        # generate the silence files
+        silence_between_repeat = self.concatenate_silences(self.silence_between_repeat)
+        silence_between_phrases = self.concatenate_silences(self.silence_between_phrases_duration)
+        silence_between_blocks = self.concatenate_silences(self.silence_between_blocks_duration)
+        
+        # if explanation, add the explation to the list of files to concatenate
+        
+        # add the first phrase to the list of files to concatenate number of times specified by repeat_1 adding a silence with the duration specified by silence_between_repeat        
+        if self.repeat_2 == 1:
+            files_to_concat.append(AudioFileClip(f"staticfiles/{self.phrase_2}_{self.language_2}.mp3"))
+        else:
+            for n in range(self.repeat_2):
+                files_to_concat.append(AudioFileClip(f"staticfiles/{self.phrase_2}_{self.language_2}.mp3"))
+                files_to_concat.append(silence_between_repeat) 
+
+        files_to_concat.append(silence_between_phrases)
+
+        if self.repeat_1 == 1:
+            files_to_concat.append(AudioFileClip(f"staticfiles/{self.phrase_1}_{self.language_1}.mp3"))
+        else:
+            for n in range(self.repeat_1):            
+                files_to_concat.append(AudioFileClip(f"staticfiles/{self.phrase_1}_{self.language_1}.mp3"))
+                files_to_concat.append(silence_between_repeat)
+        
+        # add a silence with the duration specified by silence_between_phrases
+        
+        # add a silence with the duration specified by silence_between_blocks
+        files_to_concat.append(silence_between_blocks)
+
+        # concatenate all the files in the list
+        final_clip = concatenate_audioclips(files_to_concat)
+        # save the final clip
+        # generate file name
+        # file_name is a strng with the type of block name and 8 random characters
+        return final_clip
+        
 
 
     def generate_recall_block(self):
@@ -178,7 +223,7 @@ block type: {self.block_type}""")
 
 class TextToSpeechService:
     # the constructor takes the form data as an argument and assigns it to the instance    
-    def __init__(self, text, language_1, language_2, file_name, separator, silence_between_phrases_duration, silence_between_blocks_duration, shuffle_blocks, block_type):
+    def __init__(self, text, language_1, language_2, file_name, separator, silence_between_phrases_duration, silence_between_blocks_duration, shuffle_blocks, block_type, intro_text, outro_text, intro_outro_language):
         self.text = text
         self.language_1 = language_1
         self.language_2 = language_2
@@ -188,6 +233,9 @@ class TextToSpeechService:
         self.silence_between_blocks_duration = silence_between_blocks_duration
         self.shuffle_blocks = shuffle_blocks
         self.block_type = block_type
+        self.intro_text = intro_text
+        self.outro_text = outro_text
+        self.intro_outro_language = intro_outro_language
         self.lines = [line.split(separator) for line in self.text.splitlines()]
         self.blocks_to_concat = []        
 
@@ -209,18 +257,26 @@ class TextToSpeechService:
             audio_block = block.generate_audio_block()                                                                                                                         
                                
             self.blocks_to_concat.append(audio_block)
-        
-
-    def concatenate_blocks(self):
+                        
         if self.shuffle_blocks:
-            self.perform_shuffle_blocks()
-        self.create_audio_file()
+            random.shuffle(self.blocks_to_concat)
+        if self.intro_text:
+            self.blocks_to_concat.insert(0, self.generate_intro_or_outro(self.intro_text, self.intro_outro_language))
+        if self.outro_text:
+            self.blocks_to_concat.append(self.generate_intro_or_outro(self.outro_text, self.intro_outro_language))
         
-
-    def perform_shuffle_blocks(self):
-        random.shuffle(self.blocks_to_concat)
+    def generate_intro_or_outro(self, text, language):
+        # generate an audio file with the phrase in language 2 and a silence of silence_between_blocks_duration
+        TTS = gTTS(text=text, lang=language)
+        TTS.save(f"staticfiles/{text}_{language}.mp3")     
+        silence_between_blocks = AudioBlock.concatenate_silences(self.silence_between_blocks_duration)
+        # concatenate the silence and the audio file
+        gen_text = concatenate_audioclips([AudioFileClip(f"staticfiles/{text}_{language}.mp3"), silence_between_blocks])
+        return gen_text
+        
 
     def create_audio_file(self):
+        print("number of blocks to concatenate: ", len(self.blocks_to_concat))
         final_audio = concatenate_audioclips(self.blocks_to_concat)
         final_audio.write_audiofile(f"{self.file_name}.mp3")
     
@@ -250,7 +306,7 @@ def test_audio_block():
         silence_between_blocks_duration=1, 
         explanation="The verb is understanding", 
         explanation_language="en", 
-        block_type="recall")
+        block_type="recognize")
     # generate the audio block
     block.generate_audio_block()
     # return the file name
@@ -259,11 +315,10 @@ def test_audio_block():
 def test_text_to_speech_service():
     # test the TextToSpeechService class
     # create an instance of the TextToSpeechService class
-    text = "I understand ; Je comprends\nI don't understand ; Je ne comprends pas \nI don't know ; Je ne sais pas"
-    service = TextToSpeechService(text, "en", "fr", "test", ";", 3, 1, True, "recall")
+    service = TextToSpeechService("yes ; oui", "en", "fr", "test", ";", 2, 2, True, "recall", "intro", "outro", "en")
     # generate the blocks
     service.generate_blocks()
     # concatenate the blocks
-    service.concatenate_blocks()
+    service.create_audio_file()
     # return the file name
     return service.get_audio_file()
