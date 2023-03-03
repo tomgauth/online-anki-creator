@@ -9,8 +9,20 @@ from gen_audio import TextToSpeechService
 from gen_pdf import PDFGenerator
 from audio_recorder_streamlit import audio_recorder
 import openai
+from models.anki_model import gen_anki_id, my_model
+from controllers.translation_controller import TranslationController
 
-openai.api_key = "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"
+# make the api key a text input that is hidden
+# if there is a file called openai_api_key.txt, use the api key in that file
+if "open_ai_api_key.txt" in os.listdir():
+    with open("open_ai_api_key.txt", "r") as f:
+        api_key = f.read()
+else:
+    api_key = st.text_input("OpenAI API key", type="password")
+
+
+openai.api_key = api_key
+
 model_engine = "text-davinci-003"
 
 SEPARATOR = ";"
@@ -18,45 +30,61 @@ SEPARATOR = ";"
 # create a list of languages that can be used with the google text to speech API
 language_list = ['af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue', 'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi', 'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv', 'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es', 'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy']
 
+language_list_deepl = ['EN', 'DE', 'FR', 'ES', 'IT', 'NL', 'PL', 'PT', 'RU', 'JA', 'ZH']
 
 def gen_anki_id():
     return random.randrange(1 << 30, 1 << 31)
 
 
+# add an upload button to upload an audio file
+audio_upload = st.file_uploader("Upload an audio file", type=["mp3"], accept_multiple_files=False)
+# rename the audio file to audio.mp3
+if audio_upload:
+    with open("audio.mp3", "wb") as f:
+        f.write(audio_upload.read())
+
 ai_generated_phrases = None
-target_language = st.selectbox("Target language", language_list, index=14)
+target_language = st.selectbox("Target language", language_list_deepl, index=0)
+
+#convert audio_bytes to audio.mp3
 audio_bytes = audio_recorder()
 if audio_bytes:
-    st.audio(audio_bytes, format="audio/mp3")
-    # save the audio file
     with open("audio.mp3", "wb") as f:
         f.write(audio_bytes)
+# add a button to delete the auddio file
+if st.button("Delete audio file"):
+    if "audio.mp3" in os.listdir():
+        os.remove("audio.mp3")
+    if audio_bytes:
+        audio_bytes = None
+
+if audio_bytes or audio_upload:
+    # use the lastest audio file
+    # convert audio_bytes to audio.mp3
+    audio_file = audio_bytes or audio_upload
+    # audio_upload if audio_upload else audio_bytes
+    st.audio(audio_file, format="audio/mp3")
+    # save the audio file
+    # with open("audio.mp3", "wb") as f:
+    #     f.write(audio_bytes)
     if "audio.mp3" in os.listdir():
         audio_file = open("audio.mp3", "rb")
         print("audio file: ", audio_file)
         transcript = openai.Audio.transcribe("whisper-1", audio_file)
         print(transcript)
         prompt = f"""
-        Extract important phrases from the following text and add their translation into the target language following this format:
-        Phrases are used for language learning, as a vocabulary list or list of key phrases the learner should learn.
-        Phrases can be a: 
-        a group of words that form a sentence (most of the phrases should be this)
-        an adverb
-        a noun group
-        a verb using infinitive form 
-        a noun using singular and an article if needed
-        If there is a conjugated verb in the phrase, always USE A PRONOUN!
+        Extract short sentences and phrases from the following text into the target language following this format:
+        Phrases are used for language learning, as a list of key phrases the learner should learn from the text.
+        all phrases are displayed in the original language. There is one phrase per line, pure text no quotes or dashes.
+        Write at least 15 phrases.
         MAX CHARACTERS PER PHRASE: 30
-        Spell out the numbers in the phrase and the translation
-[phrase in original language] ; [translation in the target language]
-[phrase in original language] ; [translation in the target language]
-...
-target language code = {target_language}
-
-{transcript.text}
+        Spell out the numbers in the phrase and the translation        
+        transcript:
+        {transcript.text}
         """
         important_phrases_response = openai.Completion.create(
             engine=model_engine,
+            # model = "ft-EnclLUFGeplgLaunkz1GQVw8",
             prompt=prompt,
             max_tokens=2000,
             n=1,
@@ -64,32 +92,39 @@ target language code = {target_language}
             temperature=0.7,
         )
         ai_generated_phrases = important_phrases_response.choices[0].text
+        print(ai_generated_phrases)        
         # remove all empty lines
         ai_generated_phrases = os.linesep.join([s for s in ai_generated_phrases.splitlines() if s])
-        print(important_phrases_response.choices[0].text)
-        st.write(important_phrases_response.choices[0].text)
+        # remove the following characters from the beginning of each line ['"','-', ' ']
+        ai_generated_phrases = os.linesep.join([s[1:] if s[0] == '"' else s for s in ai_generated_phrases.splitlines()])
+        # add a translation to the phrases using TranslationController. Add the translation to the end of each line, separated by a semicolon
+        translation_controller = TranslationController(ai_generated_phrases, target_language)
+        ai_generated_phrases = translation_controller.multi_line()
+        print(ai_generated_phrases)           
+        
     
 
-my_model = genanki.Model(
-  gen_anki_id(),
-  'Simple Model',
-  fields=[
-    {'name': 'Question'},
-    {'name': 'Answer'},
-    {'name': 'Audio_one'},
-    {'name': 'Audio_two'}
-  ],
-  templates=[
-    {
-      'name': 'Card 1',
-      'qfmt': '{{Question}} </br> {{Audio_one}}',
-      'afmt': '''{{FrontSide}}
-      <hr id=answer>
-        {{Audio_two}}
-        <div style="font-family: Futura; font-size: 20px;">{{Answer}}</div>        
-        <div style= "color:#00afe4; font-family: Futura; font-size: 10px;">©Online Anki Generator</div>''',
-    },
-  ])
+
+# my_model = genanki.Model(
+#   gen_anki_id(),
+#   'Simple Model',
+#   fields=[
+#     {'name': 'Question'},
+#     {'name': 'Answer'},
+#     {'name': 'Audio_one'},
+#     {'name': 'Audio_two'}
+#   ],
+#   templates=[
+#     {
+#       'name': 'Card 1',
+#       'qfmt': '{{Question}} </br> {{Audio_one}}',
+#       'afmt': '''{{FrontSide}}
+#       <hr id=answer>
+#         {{Audio_two}}
+#         <div style="font-family: Futura; font-size: 20px;">{{Answer}}</div>        
+#         <div style= "color:#00afe4; font-family: Futura; font-size: 10px;">©Online Anki Generator</div>''',
+#     },
+#   ])
 
 
 # Create a function that will take some input from streamlit (st.text_input) and return it back to the user (st.write)
@@ -211,8 +246,8 @@ def main():
             content = st.text_area(label= "input your vocabulary" ,placeholder="""hello ; bonjour
 thank you ; merci""", height=200)
         intro_outro_language = st.selectbox("Intro/Outro Language", language_list, index=14)
-        intro = st.text_area(label= "input your intro" ,placeholder="Lesson 1", height=200)
-        outro = st.text_area(label= "input your outro" ,placeholder="Thank you for listening", height=200)
+        intro = st.text_area(label= "input your intro" ,placeholder="Lesson 1", height=20)
+        outro = st.text_area(label= "input your outro" ,placeholder="Thank you for listening", height=20)
         table = txt_to_list_of_lists(content)
         deck_title = title = st.text_input("Deck Title")
         submit_anki = st.form_submit_button("Generate Anki Deck")
