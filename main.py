@@ -29,7 +29,7 @@ model_engine = "text-davinci-003"
 SEPARATOR = ";"
 
 # create a list of languages that can be used with the google text to speech API
-language_list = ['af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue', 'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi', 'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv', 'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es', 'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy']
+google_language_list = ['af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue', 'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi', 'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv', 'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es', 'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy']
 
 language_list_deepl = ["BG","CS","DA","DE","EL","EN-GB","EN-US","ES","ET","FI","FR","HU","ID","IT","JA","KO","LT","LV","NB","NL","PL","PT-BR","PT-PT","RO","RU","SK","SL","SV","TR","UK","ZH"]
 
@@ -172,8 +172,8 @@ def main():
         
         # create 2 input fields called language one and language two for inputing the language as a string (5 characters max)
         # use a selector to select the language instead of a text input
-        language_one = st.selectbox("Language One", language_list, index=14)        
-        language_two = st.selectbox("Language Two", language_list, index=20)
+        language_one = st.selectbox("Language One", google_language_list, index=14)        
+        language_two = st.selectbox("Language Two", google_language_list, index=20)
         # create a toggle button to select if you want to use audio or not
         use_audio = st.checkbox("Use Audio")
         st.text("This is a simple text input, use ; to separate the fields")
@@ -185,7 +185,7 @@ def main():
         else:            
             content = st.text_area(label= "input your vocabulary" ,placeholder="""hello ; bonjour
 thank you ; merci""", height=200)
-        intro_outro_language = st.selectbox("Intro/Outro Language", language_list, index=14)
+        intro_outro_language = st.selectbox("Intro/Outro Language", google_language_list, index=14)
         intro = st.text_area(label= "input your intro" ,placeholder="Lesson 1", height=20)
         outro = st.text_area(label= "input your outro" ,placeholder="Thank you for listening", height=20)
         table = txt_to_list_of_lists(content)

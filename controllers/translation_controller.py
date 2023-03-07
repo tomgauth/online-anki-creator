@@ -1,9 +1,14 @@
 import deepl 
+import streamlit as st
 
 # get the api key from the file api_key_deepl.txt
-with open("api_key_deepl.txt", "r") as f:
-    auth_key = f.read()
-    f.close()
+
+if "api_key_deepl.txt" in os.listdir():
+    with open("api_key_deepl.txt", "r") as f:
+        auth_key = f.read()
+else:
+    auth_key = st.text_input("Deepl API key", type="password")
+
 
 class TranslationController:
     def __init__(self, text, target_language, formality="prefer_less"):
