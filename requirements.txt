@@ -69,7 +69,7 @@ platformdirs==3.0.0
 proglog==0.1.10
 prompt-toolkit==3.0.30
 proto-plus==1.22.2
-protobuf==3.20.0
+protobuf
 psutil==5.9.1
 ptyprocess==0.7.0
 pure-eval==0.2.2
