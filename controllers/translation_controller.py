@@ -1,6 +1,6 @@
 import deepl 
 import streamlit as st
-
+import os
 # get the api key from the file api_key_deepl.txt
 
 if "api_key_deepl.txt" in os.listdir():
