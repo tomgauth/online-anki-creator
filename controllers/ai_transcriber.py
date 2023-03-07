@@ -8,7 +8,7 @@ if "open_ai_api_key.txt" in os.listdir():
     with open("open_ai_api_key.txt", "r") as f:
         api_key = f.read()
 else:
-    api_key = st.text_input("OpenAI API key", type="password")
+    api_key = st.text_input("OpenAI API key", type="password", key="open_ai_api_key")
 
 openai.api_key = api_key
 

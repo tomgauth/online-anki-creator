@@ -7,7 +7,7 @@ if "api_key_deepl.txt" in os.listdir():
     with open("api_key_deepl.txt", "r") as f:
         auth_key = f.read()
 else:
-    auth_key = st.text_input("Deepl API key", type="password")
+    auth_key = st.text_input("Deepl API key", type="password", key="deepl_auth_key")
 
 
 class TranslationController:
