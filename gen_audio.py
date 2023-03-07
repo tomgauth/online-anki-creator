@@ -278,7 +278,7 @@ class TextToSpeechService:
     def create_audio_file(self):
         print("number of blocks to concatenate: ", len(self.blocks_to_concat))
         final_audio = concatenate_audioclips(self.blocks_to_concat)
-        final_audio.write_audiofile(f"{self.file_name}.mp3")
+        final_audio.write_audiofile(f"{self.file_name}.mp3", codec="libmp3lame")
     
     def get_audio_file(self):
         return f"{self.file_name}.mp3"

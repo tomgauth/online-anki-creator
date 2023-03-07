@@ -6,7 +6,7 @@ with open("api_key_deepl.txt", "r") as f:
     f.close()
 
 class TranslationController:
-    def __init__(self, text, target_language, formality="less"):
+    def __init__(self, text, target_language, formality="prefer_less"):
         self.text = text
         self.target_language = target_language
         self.formality = formality
