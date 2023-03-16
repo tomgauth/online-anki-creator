@@ -1,6 +1,5 @@
 import openai
 import os
-from controllers.translation_controller import TranslationController
 import streamlit as st
 
 
