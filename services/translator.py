@@ -10,7 +10,6 @@ if "api_key_deepl.txt" in os.listdir():
 else:
     auth_key = st.text_input("Deepl API key", type="password", key="deepl_auth_key")
 
-deepl_translator = deepl.Translator(auth_key)
 
 google_language_list = ['af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue', 'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi', 'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv', 'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es', 'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy']
 
@@ -23,7 +22,7 @@ class Translator():
         self.target_language = target_language
         self.formality = formality
         self.translated_text = ""
-        self.translator = deepl_translator
+        self.translator = deepl.Translator(auth_key)
                 
         
     def translate(self):
