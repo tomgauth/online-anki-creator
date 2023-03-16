@@ -9,8 +9,7 @@ from gen_audio import TextToSpeechService
 from gen_pdf import PDFGenerator
 from audio_recorder_streamlit import audio_recorder
 import openai
-from models.anki_model import gen_anki_id, my_model
-from controllers.translation_controller import TranslationController
+# from models.anki_model import gen_anki_id, my_model
 from controllers.ai_transcriber import AiTrancriber
 
 # make the api key a text input that is hidden
@@ -47,8 +46,10 @@ if audio_upload:
 ai_generated_phrases = None
 target_language = st.selectbox("Target language", language_list_deepl, index=6)
 
-#convert audio_bytes to audio.mp3
+# the following line is used to create a button that will record audio
 audio_bytes = audio_recorder()
+
+# the following if statement
 if audio_bytes:
     with open("audio.mp3", "wb") as f:
         f.write(audio_bytes)
@@ -66,7 +67,7 @@ if audio_bytes or audio_upload:
     # audio_upload if audio_upload else audio_bytes
     st.audio(audio_file, format="audio/mp3")
     if "audio.mp3" in os.listdir():
-        at = AiTrancriber("audio.mp3", target_language)
+        at = AiTrancriber(audio_file, target_language)
         ai_generated_phrases = at.format_phrases()
 
 

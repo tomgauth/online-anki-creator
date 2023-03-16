@@ -17,7 +17,7 @@ class AiTrancriber():
     def __init__(self, audio_file_name, target_language, prompt_text=f"""
         Break down the following transcript into short phrases and sentences. Each phrase should be on a new line.      
         transcript:        
-        """):
+        """):        
         self.audio_file_name = audio_file_name
         self.target_language = target_language
         self.prompt_text = prompt_text
@@ -27,10 +27,13 @@ class AiTrancriber():
         self.audio_file = None        
     
     def open_audio_file(self):
+        print("audio_file_name", self.audio_file_name)
         self.audio_file = open(self.audio_file_name, "rb")
+        print("audio_file", self.audio_file)
+        return self.audio_file
 
     def transcribe(self):
-        self.open_audio_file()
+        self.audio_file = self.open_audio_file()        
         transcript = openai.Audio.transcribe(self.transcription_model, self.audio_file)    
         return transcript
     
