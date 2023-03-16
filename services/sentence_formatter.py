@@ -5,24 +5,17 @@ from services.translator import Translator
 import streamlit as st
 
 
-if "open_ai_api_key.txt" in os.listdir():
-    with open("open_ai_api_key.txt", "r") as f:
-        api_key = f.read()
-else:
-    api_key = st.text_input("OpenAI API key", type="password", key="open_ai_api_key")
-
-openai.api_key = api_key
-
 class AiFormatter():
 
-    def __init__(self, transcript):
+    def __init__(self, transcript, api_key):
         self.transcript = transcript
+        self.api_key = api_key
         self.model_engine = "gpt-3.5-turbo"
     
     def format_phrases(self):
         prompt = [{"role": "user", "content": f'Break down the following transcript into short phrases and sentences. Each phrase should be on a new line: "{ self.transcript }"'}]
         # prompt = self.prompt_text + self.transcript.text        
-
+        openai.api_key = self.api_key
         important_phrases_response = openai.ChatCompletion.create(
             model=self.model_engine,
             # prompt=prompt,

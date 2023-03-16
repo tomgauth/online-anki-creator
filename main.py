@@ -24,6 +24,19 @@ SEPARATOR = ";"
 def main():
     
     with st.form("form"):
+        if "open_ai_api_key.txt" in os.listdir():
+            with open("open_ai_api_key.txt", "r") as f:
+                open_ai_api_key = f.read()
+        else:
+            open_ai_api_key = st.text_input("OpenAI API key", type="password", key="open_ai_api_key")
+        
+        if "api_key_deepl.txt" in os.listdir():
+            with open("api_key_deepl.txt", "r") as f:
+                deepl_api_key = f.read()
+        else:
+            deepl_api_key = st.text_input("Deepl API key", type="password", key="deepl_auth_key")
+
+
         col1, col2 = st.columns(2)
         with col1:
             origin_language = st.selectbox("Select the origin language", DEEPL_LANGUAGES, index=10)            
@@ -63,24 +76,24 @@ def main():
             # audio_upload if audio_upload else audio_bytes
             if "recorded_audio.mp3" in os.listdir():
                 print("---> audio.mp3 exists")                     
-                transcriber = AiTrancriber("recorded_audio.mp3", target_language)
+                transcriber = AiTrancriber("recorded_audio.mp3", target_language, open_ai_api_key)
                 print("---> transcriber", transcriber)
                 transcript = transcriber.transcribe()
                 print("---> transcript", transcript)
-                formatter = AiFormatter(transcript.text)
+                formatter = AiFormatter(transcript.text, open_ai_api_key)
                 phrases = formatter.format_phrases()
-                translator = Translator(phrases, target_language)
+                translator = Translator(phrases, target_language, deepl_api_key)
                 ai_generated_phrases = translator.multi_line() 
                 print("---> ai generated phrases", ai_generated_phrases)
         
         if st.checkbox("Use Upload"):
             audio_file = audio_upload
             if "uploaded_audio.mp3" in os.listdir():
-                transcriber = AiTrancriber("uploaded_audio.mp3", target_language)
+                transcriber = AiTrancriber("uploaded_audio.mp3", target_language, open_ai_api_key)
                 transcript = transcriber.transcribe()
-                formatter = AiFormatter(transcript.text)
+                formatter = AiFormatter(transcript.text, open_ai_api_key)
                 phrases = formatter.format_phrases()
-                translator = Translator(phrases, target_language)
+                translator = Translator(phrases, target_language, deepl_api_key)
                 ai_generated_phrases = translator.multi_line() 
     
         

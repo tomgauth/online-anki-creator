@@ -3,12 +3,7 @@ import streamlit as st
 import os
 # get the api key from the file api_key_deepl.txt
 
-auth_key = "your auth_key here"
-if "api_key_deepl.txt" in os.listdir():
-    with open("api_key_deepl.txt", "r") as f:
-        auth_key = f.read()
-else:
-    auth_key = st.text_input("Deepl API key", type="password", key="deepl_auth_key")
+
 
 
 google_language_list = ['af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue', 'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi', 'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv', 'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es', 'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy']
@@ -17,12 +12,13 @@ language_list_deepl = ["BG","CS","DA","DE","EL","EN-GB","EN-US","ES","ET","FI","
 
 
 class Translator():
-    def __init__(self, text, target_language, formality="prefer_less"):
+    def __init__(self, text, target_language, api_key, formality="prefer_less"):
         self.text = text
         self.target_language = target_language
+        self.api_key = api_key
         self.formality = formality
-        self.translated_text = ""
-        self.translator = deepl.Translator(auth_key)
+        self.translated_text = ""        
+        self.translator = deepl.Translator(api_key)
                 
         
     def translate(self):
