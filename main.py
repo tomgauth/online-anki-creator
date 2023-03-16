@@ -28,13 +28,13 @@ def main():
             with open("open_ai_api_key.txt", "r") as f:
                 open_ai_api_key = f.read()
         else:
-            open_ai_api_key = st.text_input("OpenAI API key", type="password", key="open_ai_api_key")
+            open_ai_api_key = os.environ["OPEN_AI_API_KEY"]
         
         if "api_key_deepl.txt" in os.listdir():
             with open("api_key_deepl.txt", "r") as f:
                 deepl_api_key = f.read()
         else:
-            deepl_api_key = st.text_input("Deepl API key", type="password", key="deepl_auth_key")
+            deepl_api_key = os.environ["DEEPL_API_KEY"]
 
 
         col1, col2 = st.columns(2)
