@@ -3,7 +3,7 @@ import streamlit as st
 import os
 # get the api key from the file api_key_deepl.txt
 
-auth_key = ""
+auth_key = "your auth_key here"
 if "api_key_deepl.txt" in os.listdir():
     with open("api_key_deepl.txt", "r") as f:
         auth_key = f.read()

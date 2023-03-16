@@ -12,6 +12,8 @@ else:
 
 openai.api_key = api_key
 
+
+
 class AiTrancriber():
 
     def __init__(self, audio_file_name, target_language, prompt_text=f"""
